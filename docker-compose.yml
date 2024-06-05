@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mongodb:
+    container_name: movies-mongodb
+    image: mongo
+    ports:
+      - "27017:27017"
+    restart: on-failure
+    volumes:
+      - 'mongo:/data/db'
+    networks:
+      - movies-network
+
+  app:
+    build: .
+    container_name: movies-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    networks:
+      - movies-network
+
+volumes:
+  mongo:
+
+
+networks:
+  movies-network:
