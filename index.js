@@ -1,5 +1,6 @@
 const express = require("express")
 const bodyParser = require('body-parser');
+const connectDB = require('./services/db'); 
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,8 @@ if(!process.env.NODE_ENV)
     process.env.NODE_ENV = 'development'
 require('dotenv').config({ path: `./environments/.env.${process.env.NODE_ENV}` })
 
+// ======== Connect to MongoDB ==========
+connectDB();
 
 // ======== Routes ==========
 const moviesRouter = require('./routes/movies');
@@ -23,6 +26,5 @@ app.use('/movies', moviesRouter);
 
 
 app.listen(port, () => {
-    console.log(process.env.MONGO_CONNECTION_STRING);
     console.log(`The Server is running on port: ${port}`);
 })
