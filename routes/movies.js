@@ -124,23 +124,33 @@ router.get("/", async (req, res)=> {
 //Check Availability Endpoint
 router.get("/:movieId/:tsId", async (req, res)=> {
     try{
-        const movie = await 
-            Movie.findOne({   
-                _id: req.params.movieId, 
-                'timeSlots._id': req.params.tsId
-            })
+        const movie = await Movie.findOne({ _id: req.params.movieId });
 
-        if(!movie){
+        if (!movie) {
             return res.status(404).json({
                 success: false,
-                message: "Can not find the movie"
-            })
+                message: "Movie not found"
+            });
+        }
+
+        const timeSlot = movie.timeSlots.id(req.params.tsId);
+
+        if (!timeSlot) {
+            return res.status(404).json({
+                success: false,
+                message: "Time slot not found"
+            });
+        }
+
+        const dto = {
+            movieTitle: movie.title,
+            remainingCapacity: timeSlot.capacity - timeSlot.booked
         }
 
         return res.status(200).json({
             success: true,
-            data: movie,
-            message: 'Successfully fetched movie'
+            data: dto,
+            message: 'Successfully fetched time slot availability'
         });
 
     }catch(err){
