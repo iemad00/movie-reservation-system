@@ -23,10 +23,12 @@ cd <repository-directory>
 ### Step 3: Initialize the Database with Sample Data
 
 Request
-    URL: http://localhost:3000/movies
+    URL: /movies
+    <br>
     Method: POST
+    <br>
     Headers:
-    Authorization: Bearer abc
+- Authorization: Bearer abc
 
 ``` curl -X POST http://localhost:3000/movies -H "Authorization: Bearer abc" ```
 
@@ -39,17 +41,20 @@ You can now test other endpoints.
 
 ### List Movies
 URL: /movies
+<br>
 Method: GET
+<br>
 Description: Retrieves a list of all movies.
-
+<br>
 Example:
 ``` curl http://localhost:3000/movies ```
 
 ### Check Availability
 URL: /movies/:movieId/:tsId
+<br>
 Method: GET
+<br>
 Description: Checks the availability of a specific time slot for a movie.
-
 Parameters:
 - movieId: The ID of the movie.
 - tsId: The ID of the time slot.
@@ -59,9 +64,11 @@ Example:
 
 ### Reserve Time Slot
 URL: /movies/reserve
+<br>
 Method: PUT
+<br>
 Description: Reserves a time slot for a specific number of people.
-
+<br>
 Body:
 - movieId: The ID of the movie.
 - tsId: The ID of the time slot.
@@ -77,5 +84,6 @@ The application uses a custom error handler to manage errors. If an error occurs
 
 ## Contact
 If you have any questions, feel free to reach out.
+<br>
 ealbalawi@hotmail.com
 
