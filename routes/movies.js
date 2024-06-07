@@ -4,7 +4,7 @@ const Movie = require("../models/movie")
 
 
 // This endpoint is used to initializes the database with five different movies
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
     const movies = [
         {
             title: "Titanic",
@@ -97,31 +97,32 @@ router.post("/", async (req, res) => {
             message: "Successfully added 5 movies"
         });
     } catch (err) {
-        console.error(err);
-        return res.status(400).json({
-                success: false,
-                message: 'An error occurred while adding the movies'
-        });
+        err.message = 'An error occurred while adding the movies';
+        next(err);
     }
 });
 
 // Movie Listing Endpoint
-router.get("/", async (req, res)=> {
-    // Using this code you will get capacities only without booked count
-    // const movies = await Movie.find(null, {'timeSlots.booked': 0})
+router.get("/", async (req, res, next)=> {
+    try{
+        // Using this code you will get capacities only without booked count
+        // const movies = await Movie.find(null, {'timeSlots.booked': 0})
 
-    // Get all info about the movies, including capacaties and booked count
-    const movies = await Movie.find()
+        // Get all info about the movies, including capacaties and booked count
+        const movies = await Movie.find()
 
-    return res.status(200).json({
-        success: true,
-        data: movies,
-        message: 'Successfully fetched movies'
-    });
+        return res.status(200).json({
+            success: true,
+            data: movies,
+            message: 'Successfully fetched movies'
+        });
+    }catch(err){
+        err.message = 'An error occurred while listing the movies';
+        next(err);
+    }
 })
 
-
-//Check Availability Endpoint
+// Check Availability Endpoint
 router.get("/:movieId/:tsId", async (req, res, next)=> {
     try{
         const movie = await Movie.findOne({ _id: req.params.movieId });
@@ -154,9 +155,65 @@ router.get("/:movieId/:tsId", async (req, res, next)=> {
         });
 
     }catch(err){
+        err.message = 'An error occurred while getting the movie';
         next(err)
     }
 })
 
+// Reserve Time Slot Endpoint
+router.put("/reserve", async (req, res, next)=> {
+    try{
+        const movieId = req.body.movieId;
+        const tsId = req.body.tsId;
+        const numberOfPeopleToReserveFor = req.body.numberOfPeopleToReserveFor;
+
+        // If Fields Are Missing
+        if(!movieId || !tsId || !numberOfPeopleToReserveFor){
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields: movieId, tsId, and numberOfPeopleToReserveFor are required."
+            });
+        }
+
+        // Get The Movie
+        const movie = await Movie.findOne({ _id: movieId });
+        if (!movie) 
+            return res.status(404).json({
+                success: false,
+                message: "Movie not found"
+            });
+        
+        // Get the time slot
+        const timeSlot = movie.timeSlots.id(tsId);
+        if (!timeSlot) 
+            return res.status(404).json({
+                success: false,
+                message: "Time slot not found"
+            });
+        
+
+        // Check Avalibality
+        const remainingCapacity = timeSlot.capacity - timeSlot.booked;
+        if(numberOfPeopleToReserveFor > remainingCapacity)
+            return res.status(400).json({
+                success: false,
+                message: `Not enough capacity available for the requested number of people. Only ${remainingCapacity} seats remaining.`
+            });
+        
+        
+        // Reserve
+        timeSlot.booked += numberOfPeopleToReserveFor;
+        await movie.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Successfully reserved time slot'
+        });
+
+    }catch(err){
+        err.message = 'An error occurred while reserving the time slot';
+        next(err)
+    }
+})
 
 module.exports = router;
