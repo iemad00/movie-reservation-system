@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Movie = require("../models/movie")
 const handleError = require('../services/errorHandler'); 
+const authorize = require('../middleware/authorize');
 
 // This endpoint is used to initializes the database with five different movies
-router.post("/", async (req, res, next) => {
+// It's secuered using authorize mock middleware :)
+router.post("/", authorize, async (req, res, next) => {
     const movies = [
         {
             title: "Titanic",
