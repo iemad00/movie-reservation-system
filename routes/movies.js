@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Movie = require("../models/movie")
-
+const handleError = require('../services/errorHandler'); 
 
 // This endpoint is used to initializes the database with five different movies
 router.post("/", async (req, res, next) => {
@@ -97,8 +97,7 @@ router.post("/", async (req, res, next) => {
             message: "Successfully added 5 movies"
         });
     } catch (err) {
-        err.message = 'An error occurred while adding the movies';
-        next(err);
+        handleError('An error occurred while adding the movies', 500, next);
     }
 });
 
@@ -117,32 +116,26 @@ router.get("/", async (req, res, next)=> {
             message: 'Successfully fetched movies'
         });
     }catch(err){
-        err.message = 'An error occurred while listing the movies';
-        next(err);
+        handleError('An error occurred while listing the movies', 500, next);
     }
 })
 
 // Check Availability Endpoint
 router.get("/:movieId/:tsId", async (req, res, next)=> {
     try{
+        // Getting the movie
         const movie = await Movie.findOne({ _id: req.params.movieId });
+        if (!movie) 
+            return handleError('Movie not found', 404, next);
+        
 
-        if (!movie) {
-            return res.status(404).json({
-                success: false,
-                message: "Movie not found"
-            });
-        }
-
+        // Getting the time slot
         const timeSlot = movie.timeSlots.id(req.params.tsId);
+        if (!timeSlot) 
+            return handleError('Time slot not found', 404, next);
 
-        if (!timeSlot) {
-            return res.status(404).json({
-                success: false,
-                message: "Time slot not found"
-            });
-        }
 
+        // Calculating the avaliblality
         const dto = {
             movieTitle: movie.title,
             remainingCapacity: timeSlot.capacity - timeSlot.booked
@@ -155,8 +148,7 @@ router.get("/:movieId/:tsId", async (req, res, next)=> {
         });
 
     }catch(err){
-        err.message = 'An error occurred while getting the movie';
-        next(err)
+        handleError('An error occurred while getting the movie', 500, next);
     }
 })
 
@@ -168,40 +160,29 @@ router.put("/reserve", async (req, res, next)=> {
         const numberOfPeopleToReserveFor = req.body.numberOfPeopleToReserveFor;
 
         // If Fields Are Missing
-        if(!movieId || !tsId || !numberOfPeopleToReserveFor){
-            return res.status(400).json({
-                success: false,
-                message: "Missing required fields: movieId, tsId, and numberOfPeopleToReserveFor are required."
-            });
-        }
+        if(!movieId || !tsId || !numberOfPeopleToReserveFor)
+            return handleError('Missing required fields: movieId, tsId, and numberOfPeopleToReserveFor are required.', 400, next);
 
-        // Get The Movie
+
+        // Getting The Movie
         const movie = await Movie.findOne({ _id: movieId });
         if (!movie) 
-            return res.status(404).json({
-                success: false,
-                message: "Movie not found"
-            });
+            return handleError('Movie not found', 404, next);
+
         
-        // Get the time slot
+        // Getting the time slot
         const timeSlot = movie.timeSlots.id(tsId);
         if (!timeSlot) 
-            return res.status(404).json({
-                success: false,
-                message: "Time slot not found"
-            });
-        
+            return handleError('Time slot not found', 404, next);
 
+        
         // Check Avalibality
         const remainingCapacity = timeSlot.capacity - timeSlot.booked;
         if(numberOfPeopleToReserveFor > remainingCapacity)
-            return res.status(400).json({
-                success: false,
-                message: `Not enough capacity available for the requested number of people. Only ${remainingCapacity} seats remaining.`
-            });
+            return handleError(`Not enough capacity available for the requested number of people. Only ${remainingCapacity} seats remaining.`, 400, next);
+
         
-        
-        // Reserve
+        // Reserve the time slot
         timeSlot.booked += numberOfPeopleToReserveFor;
         await movie.save();
 
@@ -211,8 +192,7 @@ router.put("/reserve", async (req, res, next)=> {
         });
 
     }catch(err){
-        err.message = 'An error occurred while reserving the time slot';
-        next(err)
+        handleError('An error occurred while reserving the time slot', 500, next);
     }
 })
 
