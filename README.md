@@ -12,8 +12,8 @@ This project is a simple movies reservation system that uses MongoDB as its data
 ### Step 1: Clone the Repository
 
 ```sh
-git clone <repository-url>
-cd <repository-directory>
+git clone https://github.com/iemad00/movie-reservation-system.git
+cd movie-reservation-system
 ```
 
 ### Step 2: Build and Start the Containers
