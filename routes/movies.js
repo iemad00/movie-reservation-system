@@ -122,7 +122,7 @@ router.get("/", async (req, res)=> {
 
 
 //Check Availability Endpoint
-router.get("/:movieId/:tsId", async (req, res)=> {
+router.get("/:movieId/:tsId", async (req, res, next)=> {
     try{
         const movie = await Movie.findOne({ _id: req.params.movieId });
 
@@ -154,13 +154,8 @@ router.get("/:movieId/:tsId", async (req, res)=> {
         });
 
     }catch(err){
-        console.error(err);
-        return res.status(500).json({
-                success: false,
-                message: 'An error occurred while getting the movie'
-        });
+        next(err)
     }
-
 })
 
 
